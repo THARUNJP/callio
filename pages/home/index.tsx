@@ -12,8 +12,8 @@ export default function Home({ users }:HomeProps) {
 export interface User {
   user_id: number;       // from your data it's a string
   user_name: string;
-  email: string;
-  is_active: boolean;
+  email?: string;
+  is_active?: boolean;
 }
 export const getServerSideProps: GetServerSideProps<{ users: User[], error: string | null }> = async (context) => {
    const cookies = context.req.headers.cookie || "";

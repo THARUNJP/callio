@@ -13,23 +13,27 @@ export default function ContactsGrid({users}:HomeProps) {
   // Filter contacts based on search term
   const filteredContacts = users.filter(contact =>
     contact.user_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    contact.email.toLowerCase().includes(searchTerm.toLowerCase())
+    (contact.email || "").toLowerCase().includes(searchTerm.toLowerCase())
   );
+  const onIncomingCall =(fromUserId:number,offer:RTCSessionDescriptionInit)=>{
+    console.log(offer);
+    const user = users.find(e=>e.user_id ===fromUserId)|| null
+    
+setIncomingCall(user)
+  }
 
  const handleAudioCall = async (contact: User) => {
   console.log("Audio call to:", contact);
 
   try {
     // Get microphone access
-       setOutGoingCall(contact)
 
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
+    // const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     // Create a new peer connection for this call
     const pc = new RTCPeerConnection();
 
     // Add local audio tracks to the peer connection
-    stream.getTracks().forEach((track) => pc.addTrack(track, stream));
+    // stream.getTracks().forEach((track) => pc.addTrack(track, stream));
 
     // Generate an SDP offer describing our media and connection info
     const offer = await pc.createOffer();
@@ -37,6 +41,7 @@ export default function ContactsGrid({users}:HomeProps) {
     // Set the offer as local description so the connection knows our intent
     await pc.setLocalDescription(offer);
    exchangeSdpOffer(contact.user_id,offer)
+     setOutGoingCall(contact)
 
     // TODO: send offer via signaling server to the remote peer
   } catch (err) {
@@ -57,7 +62,7 @@ export default function ContactsGrid({users}:HomeProps) {
 
   return (
    <div className="p-6 max-w-6xl mx-auto">
-  <SocketClient />
+  <SocketClient onIncomingCall={onIncomingCall}  />
 
   {/* Search Bar */}
   <div className="mb-6">
