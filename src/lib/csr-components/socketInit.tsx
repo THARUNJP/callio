@@ -2,11 +2,11 @@ import { useEffect } from "react";
 import { useRouter } from "next/router";
 import { getSocket } from "@/src/service/socket";
 import { refreshToken } from "@/src/service/token";
-import { User } from "@/pages/home";
 interface SocketClientProps {
   onIncomingCall: (fromUserId: number, offer: RTCSessionDescriptionInit) => void;
+  onDeclindCall:()=>void;
 }
-export default function SocketClient({onIncomingCall}:SocketClientProps) {
+export default function SocketClient({onIncomingCall,onDeclindCall}:SocketClientProps) {
   const router = useRouter();
 
 
@@ -24,11 +24,16 @@ export default function SocketClient({onIncomingCall}:SocketClientProps) {
       onIncomingCall(fromUserId,offer)
       
     })
+    socket.on("call-declined",()=>{
+console.log("Your call has been rejected");
+onDeclindCall()
+
+    })
 
     return () => {
       socket.off("auth-error"); // cleanup listener
     };
-  }, [router]);
+  }, [router,onIncomingCall,onDeclindCall]);
 
   return null;
 }

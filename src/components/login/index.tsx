@@ -1,10 +1,11 @@
 import { useRouter } from "next/router";
 import { useState } from "react";
+import { toast } from "react-toastify";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [message, setMessage] = useState("");
+  // const [message, setMessage] = useState("");
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -22,18 +23,18 @@ export default function LoginPage() {
 
       if (data.status === "success") {
         alert("Login successful!");
-        setMessage("Login successful!");
+        toast.success("Login successful!");
         
         
         router.push("/home");
       } else {
-        setMessage(data.message || "Login failed");
+        toast.error(data.message || "Login failed");
         alert(data.message);
       }
     } catch (err) {
       console.error(err);
       alert("Server error");
-      setMessage("Server error");
+      toast.error("Server error");
     }
   };
 

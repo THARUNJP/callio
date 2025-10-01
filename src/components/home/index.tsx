@@ -1,16 +1,49 @@
-import {useState } from 'react';
+import {useEffect, useState } from 'react';
 import { Phone, Video, Search } from 'lucide-react';
 import { HomeProps, User } from '@/pages/home';
 import SocketClient from '@/src/lib/csr-components/socketInit';
 import { exchangeSdpOffer } from '@/src/service/audioClient';
 import { IncomingCallPopUp } from '../callPopUp/incoming';
 import { OutgoingCallPopUp } from '../callPopUp/outgoing';
+import { toast } from 'react-toastify';
+import { handleIncomingCallDecline } from '@/src/service/icomingCall';
 
 export default function ContactsGrid({users}:HomeProps) {
   const [searchTerm, setSearchTerm] = useState('');
  const [incomingCall, setIncomingCall] = useState<User | null>(null);
  const [outGoingCall,setOutGoingCall] = useState<User | null>(null);
   // Filter contacts based on search term
+
+useEffect(() => {
+  // No outgoing or incoming call? Do nothing
+  if (!outGoingCall && !incomingCall) return;
+
+  // Outgoing call timeout
+  let outgoingTimeout: NodeJS.Timeout | null = null;
+  if (outGoingCall) {
+    outgoingTimeout = setTimeout(() => {
+      toast.error(`${outGoingCall.user_name} did not pick up your call.`);
+      setOutGoingCall(null);
+    }, 8000); // 8s
+  }
+
+  // Incoming call timeout
+  let incomingTimeout: NodeJS.Timeout | null = null;
+  if (incomingCall) {
+    incomingTimeout = setTimeout(() => {
+      toast.info(`You missed a call from ${incomingCall.user_name}.`);
+      setIncomingCall(null);
+    }, 8000); // 8s
+  }
+
+  // Cleanup function to cancel timeouts if calls are answered/canceled
+  return () => {
+    if (outgoingTimeout) clearTimeout(outgoingTimeout);
+    if (incomingTimeout) clearTimeout(incomingTimeout);
+  };
+}, [outGoingCall, incomingCall]);
+
+
   const filteredContacts = users.filter(contact =>
     contact.user_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (contact.email || "").toLowerCase().includes(searchTerm.toLowerCase())
@@ -54,6 +87,16 @@ setIncomingCall(user)
   }
 };
 
+const handelDeclinedCall = () => {
+  if (outGoingCall) {
+    const declinedUserName = outGoingCall.user_name;
+    console.log(outGoingCall,"/");
+    
+    toast.error(`The call has been declined by ${declinedUserName}`);
+  }
+  setOutGoingCall(null);
+};
+
 
   const handleVideoCall = (contact: User) => {
     console.log('Video call to:', contact);
@@ -62,7 +105,7 @@ setIncomingCall(user)
 
   return (
    <div className="p-6 max-w-6xl mx-auto">
-  <SocketClient onIncomingCall={onIncomingCall}  />
+  <SocketClient onIncomingCall={onIncomingCall} onDeclindCall={handelDeclinedCall}  />
 
   {/* Search Bar */}
   <div className="mb-6">
@@ -120,7 +163,7 @@ setIncomingCall(user)
   {/* No results message */}
   {filteredContacts.length === 0 && (
     <div className="text-center py-12">
-      <p className="text-gray-500">No contacts found matching "{searchTerm}"</p>
+      <p className="text-gray-500">No contacts found matching {searchTerm}</p>
     </div>
   )}
 
@@ -137,7 +180,11 @@ setIncomingCall(user)
         // Accept call logic here
         setIncomingCall(null);
       }}
-      onDecline={() => setIncomingCall(null)}
+     onDecline={() => {
+  incomingCall && handleIncomingCallDecline(incomingCall?.user_id);
+  setIncomingCall(null);
+}}
+
     />
 </div>
 
