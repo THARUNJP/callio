@@ -24,14 +24,12 @@ export default function SocketClient({onIncomingCall,onDeclindCall}:SocketClient
       onIncomingCall(fromUserId,offer)
       
     })
-    socket.on("call-declined",()=>{
-console.log("Your call has been rejected");
-onDeclindCall()
-
-    })
+    socket.on("call-declined",onDeclindCall)
 
     return () => {
-      socket.off("auth-error"); // cleanup listener
+      socket.off("auth-error");
+      socket.off("call-declined",onDeclindCall)
+      socket.off("incoming-call") // cleanup listener
     };
   }, [router,onIncomingCall,onDeclindCall]);
 

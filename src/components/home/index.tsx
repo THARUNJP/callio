@@ -6,7 +6,7 @@ import { exchangeSdpOffer } from '@/src/service/audioClient';
 import { IncomingCallPopUp } from '../callPopUp/incoming';
 import { OutgoingCallPopUp } from '../callPopUp/outgoing';
 import { toast } from 'react-toastify';
-import { handleIncomingCallDecline } from '@/src/service/icomingCall';
+import { handleIncomingCallDecline } from '@/src/service/callHandler';
 
 export default function ContactsGrid({users}:HomeProps) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -88,13 +88,25 @@ setIncomingCall(user)
 };
 
 const handelDeclinedCall = () => {
+  console.log(1);
+  
   if (outGoingCall) {
     const declinedUserName = outGoingCall.user_name;
     console.log(outGoingCall,"/");
     
     toast.error(`The call has been declined by ${declinedUserName}`);
+      setOutGoingCall(null);
   }
-  setOutGoingCall(null);
+ if (incomingCall) {
+    const declinedUserName = incomingCall.user_name;
+    console.log(outGoingCall,"/");
+    
+    toast.error(`The call has been ended by ${declinedUserName}`);
+      setIncomingCall(null);
+  }
+
+
+
 };
 
 
@@ -170,7 +182,11 @@ const handelDeclinedCall = () => {
 {/* Outgoing Call Popup */}
     <OutgoingCallPopUp
     contact={outGoingCall}
-    onCancel={() => setOutGoingCall(null)}
+    onCancel={() =>{
+outGoingCall && handleIncomingCallDecline(outGoingCall?.user_id);
+      setOutGoingCall(null)
+    }
+    }
   />
 
   {/* Incoming Call Popup */}
