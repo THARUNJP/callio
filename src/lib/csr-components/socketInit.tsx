@@ -25,11 +25,14 @@ export default function SocketClient({onIncomingCall,onDeclindCall}:SocketClient
       
     })
     socket.on("call-declined",onDeclindCall)
+    socket.on("call-acceptance",()=>console.log("call acceptance reached")
+    )
 
     return () => {
       socket.off("auth-error");
       socket.off("call-declined",onDeclindCall)
       socket.off("incoming-call") // cleanup listener
+      socket.off("call-acceptance")
     };
   }, [router,onIncomingCall,onDeclindCall]);
 
