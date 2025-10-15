@@ -9,13 +9,23 @@ export const handleIncomingCallDecline = (callerId: number) => {
   // socket.emit()
 };
 
-export const handleCallAcceptance = (callerId: number) => {
-  const socket = getSocket();
+export const handleCallAcceptance = async (
+  callerId: number,
+  offer: RTCSessionDescriptionInit
+) => {
+  try {
+    console.log("offer view",offer,122323);
+    
+    const pc = new RTCPeerConnection();
+     await pc.setRemoteDescription(new RTCSessionDescription(offer));
+    const answer = await pc.createAnswer();
+     await  pc.setLocalDescription(answer);
 
-  socket.emit("call-acceptance", {
-    callerId,
-    timestamp: Date.now(),
-  });
+    const socket = getSocket();
+
+    socket.emit("call-acceptance", {
+      callerId,
+      answer:pc.localDescription,
+    });
+  } catch (err) {}
 };
-
-

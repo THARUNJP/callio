@@ -3,12 +3,17 @@ import { useRouter } from "next/router";
 import { getSocket } from "@/src/service/socket";
 import { refreshToken } from "@/src/service/token";
 interface SocketClientProps {
-  onIncomingCall: (fromUserId: number, offer: RTCSessionDescriptionInit) => void;
-  onDeclindCall:()=>void;
+  onIncomingCall: (
+    fromUserId: number,
+    offer: RTCSessionDescriptionInit
+  ) => void;
+  onDeclindCall: () => void;
 }
-export default function SocketClient({onIncomingCall,onDeclindCall}:SocketClientProps) {
+export default function SocketClient({
+  onIncomingCall,
+  onDeclindCall,
+}: SocketClientProps) {
   const router = useRouter();
-
 
   useEffect(() => {
     const socket = getSocket();
@@ -18,23 +23,24 @@ export default function SocketClient({onIncomingCall,onDeclindCall}:SocketClient
       await refreshToken(router); // refresh token or redirect
     });
 
-    socket.on("incoming-call",({fromSocket,fromUserId,offer})=>{
-      console.log(fromSocket,fromUserId,offer);
+    socket.on("incoming-call", ({ fromSocket, fromUserId, offer }) => {
+      console.log(fromSocket, fromUserId, offer);
+
+      onIncomingCall(fromUserId, offer);
+    });
+    socket.on("call-declined", onDeclindCall);
+    socket.on("call-acceptance",({recipentId,answer})=>{
+      console.log(recipentId,answer,"?answer");
       
-      onIncomingCall(fromUserId,offer)
-      
-    })
-    socket.on("call-declined",onDeclindCall)
-    socket.on("call-acceptance",()=>console.log("call acceptance reached")
-    )
+    });
 
     return () => {
       socket.off("auth-error");
-      socket.off("call-declined",onDeclindCall)
-      socket.off("incoming-call") // cleanup listener
-      socket.off("call-acceptance")
+      socket.off("call-declined", onDeclindCall);
+      socket.off("incoming-call"); // cleanup listener
+      socket.off("call-acceptance");
     };
-  }, [router,onIncomingCall,onDeclindCall]);
+  }, [router, onIncomingCall, onDeclindCall]);
 
   return null;
 }

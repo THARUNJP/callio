@@ -55,9 +55,12 @@ export default function ContactsGrid({ users }: HomeProps) {
     fromUserId: number,
     offer: RTCSessionDescriptionInit
   ) => {
+
     console.log(offer);
     const user = users.find((e) => e.user_id === fromUserId) || null;
-
+    if(user)
+    
+user.offer =offer
     setIncomingCall(user);
   };
 
@@ -199,8 +202,12 @@ export default function ContactsGrid({ users }: HomeProps) {
       <IncomingCallPopUp
         incomingCall={incomingCall}
         onAccept={() => {
-          if (incomingCall) {
-            handleCallAcceptance(incomingCall?.user_id);
+          if (incomingCall && incomingCall?.offer) {
+            handleCallAcceptance(incomingCall?.user_id,incomingCall?.offer);
+          }
+          else{
+            console.log("no sdp offer is avilable");
+            
           }
           // Accept call logic here
           setIncomingCall(null);

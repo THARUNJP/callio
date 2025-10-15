@@ -14,6 +14,7 @@ export interface User {
   user_name: string;
   email?: string;
   is_active?: boolean;
+  offer?:RTCSessionDescriptionInit
 }
 export const getServerSideProps: GetServerSideProps<{ users: User[], error: string | null }> = async (context) => {
    const cookies = context.req.headers.cookie || "";
