@@ -15,6 +15,7 @@ export default function ContactsGrid({ users }: HomeProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [incomingCall, setIncomingCall] = useState<User | null>(null);
   const [outGoingCall, setOutGoingCall] = useState<User | null>(null);
+  const [callConnected, setCallConnected] = useState<boolean>(false);
   // Filter contacts based on search term
 
   useEffect(() => {
@@ -23,7 +24,7 @@ export default function ContactsGrid({ users }: HomeProps) {
 
     // Outgoing call timeout
     let outgoingTimeout: NodeJS.Timeout | null = null;
-    if (outGoingCall) {
+    if (outGoingCall && !callConnected) {
       outgoingTimeout = setTimeout(() => {
         toast.error(`${outGoingCall.user_name} did not pick up your call.`);
         setOutGoingCall(null);
@@ -32,7 +33,7 @@ export default function ContactsGrid({ users }: HomeProps) {
 
     // Incoming call timeout
     let incomingTimeout: NodeJS.Timeout | null = null;
-    if (incomingCall) {
+    if (incomingCall && !callConnected) {
       incomingTimeout = setTimeout(() => {
         toast.info(`You missed a call from ${incomingCall.user_name}.`);
         setIncomingCall(null);
@@ -46,6 +47,14 @@ export default function ContactsGrid({ users }: HomeProps) {
     };
   }, [outGoingCall, incomingCall]);
 
+  const onCallAcceptance = (
+    recipentId: number,
+    offer: RTCSessionDescriptionInit
+  ) => {
+    setCallConnected(true);
+    console.log("Call accepted by", recipentId, offer);
+  };
+
   const filteredContacts = users.filter(
     (contact) =>
       contact.user_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -55,12 +64,9 @@ export default function ContactsGrid({ users }: HomeProps) {
     fromUserId: number,
     offer: RTCSessionDescriptionInit
   ) => {
-
     console.log(offer);
     const user = users.find((e) => e.user_id === fromUserId) || null;
-    if(user)
-    
-user.offer =offer
+    if (user) user.offer = offer;
     setIncomingCall(user);
   };
 
@@ -125,6 +131,7 @@ user.offer =offer
       <SocketClient
         onIncomingCall={onIncomingCall}
         onDeclindCall={handelDeclinedCall}
+        onCallAcceptance={onCallAcceptance}
       />
 
       {/* Search Bar */}
@@ -203,11 +210,9 @@ user.offer =offer
         incomingCall={incomingCall}
         onAccept={() => {
           if (incomingCall && incomingCall?.offer) {
-            handleCallAcceptance(incomingCall?.user_id,incomingCall?.offer);
-          }
-          else{
+            handleCallAcceptance(incomingCall?.user_id, incomingCall?.offer);
+          } else {
             console.log("no sdp offer is avilable");
-            
           }
           // Accept call logic here
           setIncomingCall(null);
