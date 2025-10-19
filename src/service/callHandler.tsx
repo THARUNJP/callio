@@ -17,6 +17,18 @@ export const handleCallAcceptance = async (
     console.log("offer view",offer,122323);
     
     const pc = new RTCPeerConnection();
+
+// emit ICE candiate
+   pc.onicecandidate = (event) => {
+        if (event?.candidate) {
+          const socket = getSocket();
+          socket.emit("ice-canditate", {
+            canditate: event?.candidate,
+            targetUserId:callerId,
+          });
+        }
+      };
+
      await pc.setRemoteDescription(new RTCSessionDescription(offer));
     const answer = await pc.createAnswer();
      await  pc.setLocalDescription(answer);
@@ -27,5 +39,8 @@ export const handleCallAcceptance = async (
       callerId,
       answer:pc.localDescription,
     });
-  } catch (err) {}
+  } catch (err) {
+    console.log(err,"err");
+    
+  }
 };

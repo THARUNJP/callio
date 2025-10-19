@@ -27,16 +27,16 @@ export default function SocketClient({
 
      const handleCallAcceptance = ({
     recipentId,
-    offer,
+    answer,
   }: {
     recipentId: number;
-    offer: RTCSessionDescriptionInit;
+    answer: RTCSessionDescriptionInit;
   }) => {
-    onCallAcceptance(recipentId, offer);
+    onCallAcceptance(recipentId, answer);
   }
 
-    socket.on("incoming-call", ({ fromSocket, fromUserId, offer }) => {
-      console.log(fromSocket, fromUserId, offer);
+    socket.on("incoming-call", ({fromUserId, offer }) => {
+      console.log(fromUserId, offer);
 
       onIncomingCall(fromUserId, offer);
     });

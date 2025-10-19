@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Phone, Video, Search } from "lucide-react";
 import { HomeProps, User } from "@/pages/home";
 import SocketClient from "@/src/lib/csr-components/socketInit";
@@ -6,16 +6,15 @@ import { exchangeSdpOffer } from "@/src/service/audioClient";
 import { IncomingCallPopUp } from "../callPopUp/incoming";
 import { OutgoingCallPopUp } from "../callPopUp/outgoing";
 import { toast } from "react-toastify";
-import {
-  handleCallAcceptance,
-  handleIncomingCallDecline,
-} from "@/src/service/callHandler";
+import { handleIncomingCallDecline } from "@/src/service/callHandler";
+import { getSocket } from "@/src/service/socket";
 
 export default function ContactsGrid({ users }: HomeProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [incomingCall, setIncomingCall] = useState<User | null>(null);
   const [outGoingCall, setOutGoingCall] = useState<User | null>(null);
   const [callConnected, setCallConnected] = useState<boolean>(false);
+  const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
   // Filter contacts based on search term
 
   useEffect(() => {
@@ -47,12 +46,50 @@ export default function ContactsGrid({ users }: HomeProps) {
     };
   }, [outGoingCall, incomingCall]);
 
-  const onCallAcceptance = (
+  const onCallAcceptance = async (
     recipentId: number,
+    answer: RTCSessionDescriptionInit
+  ) => {
+    const pc = peerConnectionRef.current;
+    await pc?.setRemoteDescription(new RTCSessionDescription(answer));
+    setCallConnected(true);
+    console.log("Call accepted by", recipentId, answer);
+  };
+  const handleCallAcceptance = async (
+    callerId: number,
     offer: RTCSessionDescriptionInit
   ) => {
-    setCallConnected(true);
-    console.log("Call accepted by", recipentId, offer);
+    try {
+      console.log("offer view", offer, 122323);
+
+      const pc = new RTCPeerConnection();
+
+      // emit ICE candiate
+      pc.onicecandidate = (event) => {
+        console.log("triggered 2");
+
+        if (event?.candidate) {
+          const socket = getSocket();
+          socket.emit("ice-candidate", {
+            canditate: event?.candidate,
+            targetUserId: callerId,
+          });
+        }
+      };
+
+      await pc.setRemoteDescription(new RTCSessionDescription(offer));
+      const answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
+
+      const socket = getSocket();
+
+      socket.emit("call-acceptance", {
+        callerId,
+        answer: pc.localDescription,
+      });
+    } catch (err) {
+      console.log(err, "err");
+    }
   };
 
   const filteredContacts = users.filter(
@@ -78,7 +115,19 @@ export default function ContactsGrid({ users }: HomeProps) {
 
       // const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       // Create a new peer connection for this call
-      const pc = new RTCPeerConnection();
+      let pc = peerConnectionRef.current;
+      pc = new RTCPeerConnection();
+      pc.onicecandidate = (event) => {
+        console.log("triggered 1");
+
+        if (event?.candidate) {
+          const socket = getSocket();
+          socket.emit("ice-candidate", {
+            candidate: event.candidate,
+            targetUserId: outGoingCall?.user_id, // or outGoingCall?.user_id on caller side
+          });
+        }
+      };
 
       // Add local audio tracks to the peer connection
       // stream.getTracks().forEach((track) => pc.addTrack(track, stream));
