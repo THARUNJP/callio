@@ -60,28 +60,36 @@ export default function ContactsGrid({ users }: HomeProps) {
     offer: RTCSessionDescriptionInit
   ) => {
     try {
+       const socket = getSocket();
       console.log("offer view", offer, 122323);
 
-      const pc = new RTCPeerConnection();
+      const pc =  new RTCPeerConnection({
+      iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+    });;
 
+    peerConnectionRef.current = pc
       // emit ICE candiate
+
+      pc.ondatachannel = (ev) => {
+    const channel = ev.channel;
+    channel.onmessage = (msg) => console.log("Got message:", msg.data);
+  };
       pc.onicecandidate = (event) => {
-        console.log("triggered 2");
+        console.log("ice......reciver",event.candidate);
 
         if (event?.candidate) {
-          const socket = getSocket();
+
           socket.emit("ice-candidate", {
-            canditate: event?.candidate,
+            candidate: event?.candidate,
             targetUserId: callerId,
           });
         }
       };
 
       await pc.setRemoteDescription(new RTCSessionDescription(offer));
+      // await pc.createDataChannel("signal")
       const answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
-
-      const socket = getSocket();
 
       socket.emit("call-acceptance", {
         callerId,
@@ -111,17 +119,23 @@ export default function ContactsGrid({ users }: HomeProps) {
     console.log("Audio call to:", contact);
 
     try {
+        const socket = getSocket();
       // Get microphone access
 
       // const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       // Create a new peer connection for this call
-      let pc = peerConnectionRef.current;
-      pc = new RTCPeerConnection();
+     
+   const pc = new RTCPeerConnection({
+      iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+    });
+    peerConnectionRef.current = pc
+    const dc = pc.createDataChannel("signal");
+
       pc.onicecandidate = (event) => {
-        console.log("triggered 1");
+        console.log("ice......caller...",event.candidate);
 
         if (event?.candidate) {
-          const socket = getSocket();
+        
           socket.emit("ice-candidate", {
             candidate: event.candidate,
             targetUserId: outGoingCall?.user_id, // or outGoingCall?.user_id on caller side
