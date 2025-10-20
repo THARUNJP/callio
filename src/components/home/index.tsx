@@ -60,24 +60,25 @@ export default function ContactsGrid({ users }: HomeProps) {
     offer: RTCSessionDescriptionInit
   ) => {
     try {
-       const socket = getSocket();
+      const socket = getSocket();
       console.log("offer view", offer, 122323);
 
-      const pc =  new RTCPeerConnection({
-      iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
-    });;
+      const pc = new RTCPeerConnection({
+        iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+      });
 
-    peerConnectionRef.current = pc
+      peerConnectionRef.current = pc;
       // emit ICE candiate
 
       pc.ondatachannel = (ev) => {
-    const channel = ev.channel;
-    channel.onmessage = (msg) => console.log("Got message:", msg.data);
-  };
+        const channel = ev.channel;
+        channel.onmessage = (msg) => console.log("Got message:", msg.data);
+      };
       pc.onicecandidate = (event) => {
-        console.log("ice......reciver",event.candidate);
+        // console.log("ice......reciver",event.candidate);
 
         if (event?.candidate) {
+          console.log("Calls in dlksmkf", callerId);
 
           socket.emit("ice-candidate", {
             candidate: event?.candidate,
@@ -100,6 +101,17 @@ export default function ContactsGrid({ users }: HomeProps) {
     }
   };
 
+  const onICECandidate = async (candidate: RTCIceCandidateInit) => {
+    try {
+      if (peerConnectionRef?.current) {
+        await peerConnectionRef.current?.addIceCandidate(new RTCIceCandidate(candidate));
+      } else {
+        console.warn("no peer connection ref found")
+      }
+    } catch (err) {
+      console.warn("err in ice excahnge", err);
+    }
+  };
   const filteredContacts = users.filter(
     (contact) =>
       contact.user_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -119,26 +131,27 @@ export default function ContactsGrid({ users }: HomeProps) {
     console.log("Audio call to:", contact);
 
     try {
-        const socket = getSocket();
+      const socket = getSocket();
       // Get microphone access
 
       // const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       // Create a new peer connection for this call
-     
-   const pc = new RTCPeerConnection({
-      iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
-    });
-    peerConnectionRef.current = pc
-    const dc = pc.createDataChannel("signal");
+
+      const pc = new RTCPeerConnection({
+        iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+      });
+      peerConnectionRef.current = pc;
+      const dc = pc.createDataChannel("signal");
 
       pc.onicecandidate = (event) => {
-        console.log("ice......caller...",event.candidate);
+        // console.log("ice......caller...",event.candidate);
 
         if (event?.candidate) {
-        
+          console.log("Calls in dlksmkf", contact?.user_id);
+
           socket.emit("ice-candidate", {
             candidate: event.candidate,
-            targetUserId: outGoingCall?.user_id, // or outGoingCall?.user_id on caller side
+            targetUserId: contact?.user_id, // or outGoingCall?.user_id on caller side
           });
         }
       };
@@ -195,6 +208,7 @@ export default function ContactsGrid({ users }: HomeProps) {
         onIncomingCall={onIncomingCall}
         onDeclindCall={handelDeclinedCall}
         onCallAcceptance={onCallAcceptance}
+        onICECandidate={onICECandidate}
       />
 
       {/* Search Bar */}

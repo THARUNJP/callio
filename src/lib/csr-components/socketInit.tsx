@@ -8,12 +8,17 @@ interface SocketClientProps {
     offer: RTCSessionDescriptionInit
   ) => void;
   onDeclindCall: () => void;
-  onCallAcceptance: (recipentId:number,answer: RTCSessionDescriptionInit) => void;
+  onCallAcceptance: (
+    recipentId: number,
+    answer: RTCSessionDescriptionInit
+  ) => void;
+  onICECandidate:(candidate:RTCIceCandidateInit)=>void
 }
 export default function SocketClient({
   onIncomingCall,
   onDeclindCall,
   onCallAcceptance,
+  onICECandidate
 }: SocketClientProps) {
   const router = useRouter();
 
@@ -25,29 +30,41 @@ export default function SocketClient({
       await refreshToken(router); // refresh token or redirect
     });
 
-     const handleCallAcceptance = ({
-    recipentId,
-    answer,
-  }: {
-    recipentId: number;
-    answer: RTCSessionDescriptionInit;
-  }) => {
-    onCallAcceptance(recipentId, answer);
-  }
+    const handleCallAcceptance = ({
+      recipentId,
+      answer,
+    }: {
+      recipentId: number;
+      answer: RTCSessionDescriptionInit;
+    }) => {
+      onCallAcceptance(recipentId, answer);
+    };
 
-    socket.on("incoming-call", ({fromUserId, offer }) => {
+    const handleICECandidateExchange = ({
+      candidate,
+    }: {
+      candidate: RTCIceCandidateInit;
+    }) => {
+      if(!candidate) return;
+      onICECandidate(candidate)
+        console.log(candidate, "/ice");
+    };
+
+    socket.on("incoming-call", ({ fromUserId, offer }) => {
       console.log(fromUserId, offer);
 
       onIncomingCall(fromUserId, offer);
     });
     socket.on("call-declined", onDeclindCall);
     socket.on("call-acceptance", handleCallAcceptance);
+    socket.on("ice-candidate-client", handleICECandidateExchange);
 
     return () => {
       socket.off("auth-error");
       socket.off("call-declined", onDeclindCall);
       socket.off("incoming-call"); // cleanup listener
-      socket.off("call-acceptance",handleCallAcceptance);
+      socket.off("call-acceptance", handleCallAcceptance);
+      socket.off("ice-candidate-client", handleICECandidateExchange);
     };
   }, [router, onIncomingCall, onDeclindCall]);
 
