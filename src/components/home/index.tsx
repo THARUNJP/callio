@@ -20,6 +20,7 @@ export default function ContactsGrid({ users }: HomeProps) {
   useEffect(() => {
     // No outgoing or incoming call? Do nothing
     if (!outGoingCall && !incomingCall) return;
+console.log(callConnected,"call connected");
 
     // Outgoing call timeout
     let outgoingTimeout: NodeJS.Timeout | null = null;
@@ -292,7 +293,7 @@ export default function ContactsGrid({ users }: HomeProps) {
             console.log("no sdp offer is avilable");
           }
           // Accept call logic here
-          setIncomingCall(null);
+          // setIncomingCall(null);
         }}
         onDecline={() => {
           incomingCall && handleIncomingCallDecline(incomingCall?.user_id);
