@@ -48,10 +48,18 @@ function handleAcceptEvent() {
         <p className="text-sm text-gray-500 mb-4">{incomingCall?.email}</p>
 
         {callConnected ? (
+          <div className="flex flex-col justify-center">
           <div className="flex justify-center gap-6 mb-4">
           <Mic className="w-6 h-6 text-gray-400 opacity-50" />
           <Volume2 className="w-6 h-6 text-gray-400 opacity-50" />
         </div>
+         <button
+              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              onClick={onDecline} //  reject call
+            >
+              End
+            </button>
+            </div>
         ) : (
           <div className="flex justify-around mt-4">
             <button

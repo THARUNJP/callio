@@ -4,10 +4,11 @@ import { useEffect, useRef } from "react";
 
 interface OutgoingCallProps {
   contact: User | null;
+  callConnected:boolean;
   onCancel: () => void; // to cancel the outgoing call
 }
 
-export const OutgoingCallPopUp = ({ contact, onCancel }: OutgoingCallProps) => {
+export const OutgoingCallPopUp = ({ contact, onCancel,callConnected }: OutgoingCallProps) => {
   const audioRefOutgoing = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
@@ -18,6 +19,14 @@ export const OutgoingCallPopUp = ({ contact, onCancel }: OutgoingCallProps) => {
       if (audioRefOutgoing.current) audioRefOutgoing.current.currentTime = 0;
     }
   }, [contact]);
+
+  useEffect(()=>{
+if(callConnected){
+  audioRefOutgoing.current?.pause();
+   if (audioRefOutgoing.current) audioRefOutgoing.current.currentTime = 0;
+
+}
+  },[callConnected])
 
   if (!contact) return null;
 
@@ -41,7 +50,7 @@ export const OutgoingCallPopUp = ({ contact, onCancel }: OutgoingCallProps) => {
             className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
             onClick={onCancel}
           >
-            Cancel
+            {callConnected ? "End":"Cancel"}
           </button>
         </div>
       </div>

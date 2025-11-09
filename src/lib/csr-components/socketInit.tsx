@@ -47,7 +47,6 @@ export default function SocketClient({
     }) => {
       if(!candidate) return;
       onICECandidate(candidate)
-        console.log(candidate, "/ice");
     };
 
     socket.on("incoming-call", ({ fromUserId, offer }) => {

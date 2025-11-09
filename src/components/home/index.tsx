@@ -26,7 +26,8 @@ export default function ContactsGrid({ users }: HomeProps) {
     if (outGoingCall && !callConnected) {
       outgoingTimeout = setTimeout(() => {
         setCallConnected((connectedNow) => {
-          if (connectedNow) {
+         
+          if (!connectedNow) {
             toast.error(`${outGoingCall.user_name} did not pick up your call.`);
             setOutGoingCall(null);
           }
@@ -40,7 +41,7 @@ export default function ContactsGrid({ users }: HomeProps) {
     if (incomingCall && !callConnected) {
       incomingTimeout = setTimeout(() => {
         setCallConnected((connectedNow) => {
-          if (connectedNow) {
+          if (!connectedNow) {
             toast.info(`You missed a call from ${incomingCall.user_name}.`);
             setIncomingCall(null);
           }
@@ -113,6 +114,9 @@ export default function ContactsGrid({ users }: HomeProps) {
   };
 
   const onICECandidate = async (candidate: RTCIceCandidateInit) => {
+    console.log(callConnected,"??//?? caller side");
+    setCallConnected(true)
+    
     try {
       if (peerConnectionRef?.current) {
         await peerConnectionRef.current?.addIceCandidate(
@@ -293,6 +297,7 @@ export default function ContactsGrid({ users }: HomeProps) {
           outGoingCall && handleIncomingCallDecline(outGoingCall?.user_id);
           setOutGoingCall(null);
         }}
+        callConnected={callConnected}
       />
 
       {/* Incoming Call Popup */}
