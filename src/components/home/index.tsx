@@ -20,14 +20,18 @@ export default function ContactsGrid({ users }: HomeProps) {
   useEffect(() => {
     // No outgoing or incoming call? Do nothing
     if (!outGoingCall && !incomingCall) return;
-console.log(callConnected,"call connected");
 
     // Outgoing call timeout
     let outgoingTimeout: NodeJS.Timeout | null = null;
     if (outGoingCall && !callConnected) {
       outgoingTimeout = setTimeout(() => {
-        toast.error(`${outGoingCall.user_name} did not pick up your call.`);
-        setOutGoingCall(null);
+        setCallConnected((connectedNow) => {
+          if (connectedNow) {
+            toast.error(`${outGoingCall.user_name} did not pick up your call.`);
+            setOutGoingCall(null);
+          }
+          return connectedNow;
+        });
       }, 8000); // 8s
     }
 
@@ -35,8 +39,13 @@ console.log(callConnected,"call connected");
     let incomingTimeout: NodeJS.Timeout | null = null;
     if (incomingCall && !callConnected) {
       incomingTimeout = setTimeout(() => {
-        toast.info(`You missed a call from ${incomingCall.user_name}.`);
-        setIncomingCall(null);
+        setCallConnected((connectedNow) => {
+          if (connectedNow) {
+            toast.info(`You missed a call from ${incomingCall.user_name}.`);
+            setIncomingCall(null);
+          }
+          return connectedNow;
+        });
       }, 8000); // 8s
     }
 
@@ -44,6 +53,7 @@ console.log(callConnected,"call connected");
     return () => {
       if (outgoingTimeout) clearTimeout(outgoingTimeout);
       if (incomingTimeout) clearTimeout(incomingTimeout);
+      setCallConnected(false);
     };
   }, [outGoingCall, incomingCall]);
 
@@ -105,9 +115,11 @@ console.log(callConnected,"call connected");
   const onICECandidate = async (candidate: RTCIceCandidateInit) => {
     try {
       if (peerConnectionRef?.current) {
-        await peerConnectionRef.current?.addIceCandidate(new RTCIceCandidate(candidate));
+        await peerConnectionRef.current?.addIceCandidate(
+          new RTCIceCandidate(candidate)
+        );
       } else {
-        console.warn("no peer connection ref found")
+        console.warn("no peer connection ref found");
       }
     } catch (err) {
       console.warn("err in ice excahnge", err);
