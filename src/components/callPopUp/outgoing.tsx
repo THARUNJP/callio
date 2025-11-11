@@ -1,32 +1,47 @@
 import { User } from "@/pages/home";
-import { Mic, Volume2 } from "lucide-react";
+import { getMicroPhone } from "@/src/lib/helper";
+import { Mic, MicOff, Volume2 } from "lucide-react";
 import { useEffect, useRef } from "react";
 
 interface OutgoingCallProps {
   contact: User | null;
-  callConnected:boolean;
+  callConnected: boolean;
   onCancel: () => void; // to cancel the outgoing call
 }
 
-export const OutgoingCallPopUp = ({ contact, onCancel,callConnected }: OutgoingCallProps) => {
+export const OutgoingCallPopUp = ({
+  contact,
+  onCancel,
+  callConnected,
+}: OutgoingCallProps) => {
   const audioRefOutgoing = useRef<HTMLAudioElement>(null);
+  const microphoneRef = useRef<boolean>(false);
 
   useEffect(() => {
     if (contact) {
       audioRefOutgoing.current?.play();
+      getMicroPhoneStatus();
     } else {
       audioRefOutgoing.current?.pause();
       if (audioRefOutgoing.current) audioRefOutgoing.current.currentTime = 0;
     }
+
+    return () => {
+      microphoneRef.current = false;
+    };
   }, [contact]);
 
-  useEffect(()=>{
-if(callConnected){
-  audioRefOutgoing.current?.pause();
-   if (audioRefOutgoing.current) audioRefOutgoing.current.currentTime = 0;
+  async function getMicroPhoneStatus() {
+    const status: boolean = await getMicroPhone();
+    microphoneRef.current = status;
+  }
 
-}
-  },[callConnected])
+  useEffect(() => {
+    if (callConnected) {
+      audioRefOutgoing.current?.pause();
+      if (audioRefOutgoing.current) audioRefOutgoing.current.currentTime = 0;
+    }
+  }, [callConnected]);
 
   if (!contact) return null;
 
@@ -37,11 +52,17 @@ if(callConnected){
       <div className="bg-white rounded-lg p-6 w-80 text-center shadow-lg">
         <h3 className="text-lg font-semibold mb-2">{contact.user_name}</h3>
         <p className="text-sm text-gray-500 mb-2">{contact.email}</p>
-        <p className="text-sm text-blue-600 mb-4 animate-pulse">Ringing...</p>
+        {!callConnected && (
+          <p className="text-sm text-blue-600 mb-4 animate-pulse">Ringing...</p>
+        )}
 
         {/* Disabled icons */}
         <div className="flex justify-center gap-6 mb-4">
-          <Mic className="w-6 h-6 text-gray-400 opacity-50" />
+          {microphoneRef.current ? (
+            <Mic className="w-6 h-6 text-gray-400 opacity-50" />
+          ) : (
+            <MicOff className="w-6 h-6 text-gray-400 opacity-50" />
+          )}
           <Volume2 className="w-6 h-6 text-gray-400 opacity-50" />
         </div>
 
@@ -50,7 +71,7 @@ if(callConnected){
             className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
             onClick={onCancel}
           >
-            {callConnected ? "End":"Cancel"}
+            {callConnected ? "End" : "Cancel"}
           </button>
         </div>
       </div>

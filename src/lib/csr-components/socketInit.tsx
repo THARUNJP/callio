@@ -46,6 +46,8 @@ export default function SocketClient({
       candidate: RTCIceCandidateInit;
     }) => {
       if(!candidate) return;
+      console.log(candidate,"canditate exchange////");
+      
       onICECandidate(candidate)
     };
 
