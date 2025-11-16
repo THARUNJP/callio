@@ -1,5 +1,6 @@
 import { User } from "@/pages/home";
-import { Mic, Volume2 } from "lucide-react";
+import UsePermission from "@/src/hooks/usePermission";
+import { Mic, MicOff, Volume2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 interface IncomingCallProps {
@@ -15,6 +16,8 @@ export const IncomingCallPopUp = ({
 }: IncomingCallProps) => {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [callConnected, setCallConnected] = useState<boolean>(false);
+  const microphoneRef = UsePermission("microphone")
+
   useEffect(() => {
     if (incomingCall) {
       audioRef.current?.play();
@@ -50,7 +53,11 @@ function handleAcceptEvent() {
         {callConnected ? (
           <div className="flex flex-col justify-center">
           <div className="flex justify-center gap-6 mb-4">
-          <Mic className="w-6 h-6 text-gray-400 opacity-50" />
+          {microphoneRef === "granted" ? (
+            <Mic className="w-6 h-6 text-gray-400 opacity-50" />
+          ) : (
+            <MicOff className="w-6 h-6 text-gray-400 opacity-50" />
+          )}
           <Volume2 className="w-6 h-6 text-gray-400 opacity-50" />
         </div>
          <button
