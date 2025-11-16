@@ -1,5 +1,5 @@
 import { User } from "@/pages/home";
-import { getMicroPhone } from "@/src/lib/helper";
+import UsePermission from "@/src/hooks/usePermission";
 import { Mic, MicOff, Volume2 } from "lucide-react";
 import { useEffect, useRef } from "react";
 
@@ -15,26 +15,25 @@ export const OutgoingCallPopUp = ({
   callConnected,
 }: OutgoingCallProps) => {
   const audioRefOutgoing = useRef<HTMLAudioElement>(null);
-  const microphoneRef = useRef<boolean>(false);
+  const microphoneRef = UsePermission("microphone")
 
   useEffect(() => {
     if (contact) {
       audioRefOutgoing.current?.play();
-      getMicroPhoneStatus();
+      // getMicroPhoneStatus();
     } else {
       audioRefOutgoing.current?.pause();
       if (audioRefOutgoing.current) audioRefOutgoing.current.currentTime = 0;
     }
 
-    return () => {
-      microphoneRef.current = false;
-    };
+    // return () => {
+    //   // microphoneRef = false;
+    // };
   }, [contact]);
 
-  async function getMicroPhoneStatus() {
-    const status: boolean = await getMicroPhone();
-    microphoneRef.current = status;
-  }
+  // async function getMicroPhoneStatus() {
+   
+  // }
 
   useEffect(() => {
     if (callConnected) {
@@ -58,7 +57,7 @@ export const OutgoingCallPopUp = ({
 
         {/* Disabled icons */}
         <div className="flex justify-center gap-6 mb-4">
-          {microphoneRef.current ? (
+          {microphoneRef === "granted" ? (
             <Mic className="w-6 h-6 text-gray-400 opacity-50" />
           ) : (
             <MicOff className="w-6 h-6 text-gray-400 opacity-50" />
