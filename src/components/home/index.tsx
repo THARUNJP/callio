@@ -81,11 +81,23 @@ export default function ContactsGrid({ users }: HomeProps) {
 
       peerConnectionRef.current = pc;
       // emit ICE candiate
-
+        pc.ontrack = (event)=>{
+        console.log(event,"???");
+        
+      }
+      pc.ontrack = (event) => {
+  console.log("REMOTE TRACK RECEIVED!!!!", event.streams[0]);
+};
+const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+stream.getTracks().forEach((track) => pc.addTrack(track, stream));
       pc.ondatachannel = (ev) => {
         const channel = ev.channel;
         channel.onmessage = (msg) => console.log("Got message:", msg.data);
       };
+      pc.ontrack = (event)=>{
+        console.log(event,"???");
+        
+      }
       pc.onicecandidate = (event) => {
         // console.log("ice......reciver",event.candidate);
 
@@ -151,15 +163,20 @@ export default function ContactsGrid({ users }: HomeProps) {
       const socket = getSocket();
       // Get microphone access
 
-      // const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      
       // Create a new peer connection for this call
 
       const pc = new RTCPeerConnection({
         iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
       });
       peerConnectionRef.current = pc;
+         pc.ontrack = (event)=>{
+        console.log(event,"???");
+        
+      }
       const dc = pc.createDataChannel("signal");
-
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach((track)=>pc.addTrack(track,stream));
       pc.onicecandidate = (event) => {
         // console.log("ice......caller...",event.candidate);
 
