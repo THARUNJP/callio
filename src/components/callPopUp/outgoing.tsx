@@ -7,17 +7,18 @@ interface OutgoingCallProps {
   contact: User | null;
   callConnected: boolean;
   onCancel: () => void; // to cancel the outgoing call
-  audioStream: MediaStream | null
+  audioStream: MediaStream | null;
 }
 
 export const OutgoingCallPopUp = ({
   contact,
   onCancel,
   callConnected,
-  audioStream
+  audioStream,
 }: OutgoingCallProps) => {
   const audioRefOutgoing = useRef<HTMLAudioElement>(null);
-  const microphoneRef = UsePermission("microphone")
+  const remoteAudioRef = useRef<HTMLAudioElement>(null);
+  const microphoneRef = UsePermission("microphone");
 
   useEffect(() => {
     if (contact) {
@@ -34,9 +35,16 @@ export const OutgoingCallPopUp = ({
   }, [contact]);
 
   // async function getMicroPhoneStatus() {
-   
-  // }
 
+  // }
+  useEffect(() => {
+    if (audioStream && remoteAudioRef?.current) {
+      remoteAudioRef.current.srcObject = audioStream;
+      remoteAudioRef.current.play().catch((err) => {
+        console.log(err, "err in playing the audio");
+      });
+    }
+  }, [audioStream]);
   useEffect(() => {
     if (callConnected) {
       audioRefOutgoing.current?.pause();
@@ -50,6 +58,8 @@ export const OutgoingCallPopUp = ({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <audio ref={audioRefOutgoing} src="./ringTone/incoming.mp3" loop />
 
+      {/* Incoming remote audio stream */}
+      <audio ref={remoteAudioRef} autoPlay playsInline />
       <div className="bg-white rounded-lg p-6 w-80 text-center shadow-lg">
         <h3 className="text-lg font-semibold mb-2">{contact.user_name}</h3>
         <p className="text-sm text-gray-500 mb-2">{contact.email}</p>

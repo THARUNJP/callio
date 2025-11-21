@@ -97,10 +97,7 @@ stream.getTracks().forEach((track) => pc.addTrack(track, stream));
         const channel = ev.channel;
         channel.onmessage = (msg) => console.log("Got message:", msg.data);
       };
-      pc.ontrack = (event)=>{
-        console.log(event,"???");
-        
-      }
+
       pc.onicecandidate = (event) => {
         // console.log("ice......reciver",event.candidate);
 
@@ -314,7 +311,7 @@ stream.getTracks().forEach((track) => pc.addTrack(track, stream));
       {/* Outgoing Call Popup */}
       <OutgoingCallPopUp
         contact={outGoingCall}
-        audioStream={outGoingCallAudioRef.current}
+        audioStream={outGoingCallAudioRef?.current}
         onCancel={() => {
           outGoingCall && handleIncomingCallDecline(outGoingCall?.user_id);
           setOutGoingCall(null);
@@ -325,6 +322,7 @@ stream.getTracks().forEach((track) => pc.addTrack(track, stream));
       {/* Incoming Call Popup */}
       <IncomingCallPopUp
         incomingCall={incomingCall}
+        audioStream={incomingCallAudioRef?.current}
         onAccept={() => {
           if (incomingCall && incomingCall?.offer) {
             handleCallAcceptance(incomingCall?.user_id, incomingCall?.offer);
