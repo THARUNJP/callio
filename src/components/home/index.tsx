@@ -15,6 +15,9 @@ export default function ContactsGrid({ users }: HomeProps) {
   const [outGoingCall, setOutGoingCall] = useState<User | null>(null);
   const [callConnected, setCallConnected] = useState<boolean>(false);
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
+  const outGoingCallAudioRef = useRef<MediaStream|null>(null);
+  const incomingCallAudioRef = useRef<MediaStream|null>(null);
+
   // Filter contacts based on search term
 
   useEffect(() => {
@@ -81,13 +84,13 @@ export default function ContactsGrid({ users }: HomeProps) {
 
       peerConnectionRef.current = pc;
       // emit ICE candiate
-        pc.ontrack = (event)=>{
-        console.log(event,"???");
-        
-      }
+    
       pc.ontrack = (event) => {
+        const src = event.streams[0];
+      incomingCallAudioRef.current = src;
+        // need to pass to the outgoing call comp to render
   console.log("REMOTE TRACK RECEIVED!!!!", event.streams[0]);
-};
+   };
 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 stream.getTracks().forEach((track) => pc.addTrack(track, stream));
       pc.ondatachannel = (ev) => {
@@ -171,7 +174,8 @@ stream.getTracks().forEach((track) => pc.addTrack(track, stream));
       });
       peerConnectionRef.current = pc;
          pc.ontrack = (event)=>{
-        console.log(event,"???");
+      const src = event.streams[0];
+      outGoingCallAudioRef.current = src;
         
       }
       const dc = pc.createDataChannel("signal");
@@ -310,6 +314,7 @@ stream.getTracks().forEach((track) => pc.addTrack(track, stream));
       {/* Outgoing Call Popup */}
       <OutgoingCallPopUp
         contact={outGoingCall}
+        audioStream={outGoingCallAudioRef.current}
         onCancel={() => {
           outGoingCall && handleIncomingCallDecline(outGoingCall?.user_id);
           setOutGoingCall(null);

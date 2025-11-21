@@ -7,12 +7,14 @@ interface OutgoingCallProps {
   contact: User | null;
   callConnected: boolean;
   onCancel: () => void; // to cancel the outgoing call
+  audioStream: MediaStream | null
 }
 
 export const OutgoingCallPopUp = ({
   contact,
   onCancel,
   callConnected,
+  audioStream
 }: OutgoingCallProps) => {
   const audioRefOutgoing = useRef<HTMLAudioElement>(null);
   const microphoneRef = UsePermission("microphone")
