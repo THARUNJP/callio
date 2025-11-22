@@ -1,3 +1,4 @@
+import { URL } from "@/src/lib/constant/constant";
 import { useRouter } from "next/router";
 import { useState } from "react";
 import { toast } from "react-toastify";
@@ -12,7 +13,7 @@ export default function LoginPage() {
     e.preventDefault();
 
     try {
-      const res = await fetch("http://localhost:8000/login", {
+      const res = await fetch(`${URL}/login`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },

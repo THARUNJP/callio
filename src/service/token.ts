@@ -1,8 +1,9 @@
 import { NextRouter } from "next/router";
+import { URL } from "../lib/constant/constant";
 
 export const refreshToken = async (router: NextRouter) => {
   try {
-    const response = await fetch("http://localhost:8000/refresh-token", {
+    const response = await fetch(`${URL}/refresh-token`, {
       method: "POST", // refresh token is usually POST
       credentials: "include",
     });
@@ -19,11 +20,13 @@ export const refreshToken = async (router: NextRouter) => {
 
 export const refreshTokenSSR = async (cookies: string) => {
   try {
-    const response = await fetch("http://localhost:8000/refresh-token", {
+    const response = await fetch(`${URL}/refresh-token`, {
       method: "POST", // refresh token is usually POST
       headers: {
         Cookie: cookies,
       },
+      credentials: "include",
+
     });
     if (!response.ok) {
       return false;

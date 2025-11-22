@@ -1,4 +1,5 @@
 import ContactsGrid from "@/src/components/home";
+import { URL } from "@/src/lib/constant/constant";
 import { refreshTokenSSR } from "@/src/service/token";
 import { GetServerSideProps } from "next";
 
@@ -20,7 +21,7 @@ export const getServerSideProps: GetServerSideProps<{ users: User[], error: stri
    const cookies = context.req.headers.cookie || "";
 
   try {
-     const res = await fetch("http://localhost:8000/users", {
+     const res = await fetch(`${URL}/users`, {
          headers: {
         "Cookie": cookies, // <-- pass cookies manually
       },
