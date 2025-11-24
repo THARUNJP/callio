@@ -15,8 +15,8 @@ export default function ContactsGrid({ users }: HomeProps) {
   const [outGoingCall, setOutGoingCall] = useState<User | null>(null);
   const [callConnected, setCallConnected] = useState<boolean>(false);
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
-  const outGoingCallAudioRef = useRef<MediaStream|null>(null);
-  const incomingCallAudioRef = useRef<MediaStream|null>(null);
+  const outGoingCallAudioRef = useRef<MediaStream | null>(null);
+  const incomingCallAudioRef = useRef<MediaStream | null>(null);
 
   // Filter contacts based on search term
 
@@ -29,7 +29,6 @@ export default function ContactsGrid({ users }: HomeProps) {
     if (outGoingCall && !callConnected) {
       outgoingTimeout = setTimeout(() => {
         setCallConnected((connectedNow) => {
-         
           if (!connectedNow) {
             toast.error(`${outGoingCall.user_name} did not pick up your call.`);
             setOutGoingCall(null);
@@ -84,15 +83,21 @@ export default function ContactsGrid({ users }: HomeProps) {
 
       peerConnectionRef.current = pc;
       // emit ICE candiate
-    
+
       pc.ontrack = (event) => {
         const src = event.streams[0];
-      incomingCallAudioRef.current = src;
+        incomingCallAudioRef.current = src;
         // need to pass to the outgoing call comp to render
-  console.log("REMOTE TRACK RECEIVED!!!!", event.streams[0]);
-   };
-const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-stream.getTracks().forEach((track) => pc.addTrack(track, stream));
+        console.log("REMOTE TRACK RECEIVED!!!!", event.streams[0]);
+      };
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
+      });
+      stream.getTracks().forEach((track) => pc.addTrack(track, stream));
       pc.ondatachannel = (ev) => {
         const channel = ev.channel;
         channel.onmessage = (msg) => console.log("Got message:", msg.data);
@@ -126,9 +131,9 @@ stream.getTracks().forEach((track) => pc.addTrack(track, stream));
   };
 
   const onICECandidate = async (candidate: RTCIceCandidateInit) => {
-    console.log(callConnected,"??//?? caller side");
-    setCallConnected(true)
-    
+    console.log(callConnected, "??//?? caller side");
+    setCallConnected(true);
+
     try {
       if (peerConnectionRef?.current) {
         await peerConnectionRef.current?.addIceCandidate(
@@ -163,21 +168,25 @@ stream.getTracks().forEach((track) => pc.addTrack(track, stream));
       const socket = getSocket();
       // Get microphone access
 
-      
       // Create a new peer connection for this call
 
       const pc = new RTCPeerConnection({
         iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
       });
       peerConnectionRef.current = pc;
-         pc.ontrack = (event)=>{
-      const src = event.streams[0];
-      outGoingCallAudioRef.current = src;
-        
-      }
+      pc.ontrack = (event) => {
+        const src = event.streams[0];
+        outGoingCallAudioRef.current = src;
+      };
       const dc = pc.createDataChannel("signal");
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      stream.getTracks().forEach((track)=>pc.addTrack(track,stream));
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
+      });
+      stream.getTracks().forEach((track) => pc.addTrack(track, stream));
       pc.onicecandidate = (event) => {
         // console.log("ice......caller...",event.candidate);
 
